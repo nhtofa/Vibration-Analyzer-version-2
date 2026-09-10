@@ -1,0 +1,16 @@
+# Local Python environment
+.venv/
+venv/
+env/
+
+# Python generated files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local tooling and OS files
+.streamlit/
+.pytest_cache/
+.mypy_cache/
+.DS_Store
+Thumbs.db
