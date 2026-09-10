@@ -1,0 +1,94 @@
+package main
+
+import (
+	"context"
+	"embed"
+	"fmt"
+	"io/fs"
+	"net"
+	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"time"
+)
+
+// web contains the same offline-first frontend used by the Android build.
+//go:embed web
+var web embed.FS
+
+func main() {
+	assets, err := fs.Sub(web, "web")
+	if err != nil {
+		panic(err)
+	}
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		panic(err)
+	}
+	server := &http.Server{Handler: http.FileServer(http.FS(assets))}
+	serverDone := make(chan struct{})
+	go func() {
+		_ = server.Serve(listener)
+		close(serverDone)
+	}()
+
+	url := fmt.Sprintf("http://127.0.0.1:%d/", listener.Addr().(*net.TCPAddr).Port)
+	if runtime.GOOS == "windows" {
+		if edge := findEdge(); edge != "" {
+			command := exec.Command(edge, "--app="+url)
+			if err := command.Start(); err == nil {
+				_ = command.Wait()
+				shutdown(server, listener, serverDone)
+				return
+			}
+		}
+		// Edge is installed on supported Windows versions; this fallback keeps
+		// the portable launcher useful on machines where its path is unusual.
+		_ = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+		return
+	}
+	_ = exec.Command(browserCommand(), url).Start()
+	select {}
+}
+
+func shutdown(server *http.Server, listener net.Listener, done <-chan struct{}) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	_ = server.Shutdown(ctx)
+	_ = listener.Close()
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+	}
+}
+
+func findEdge() string {
+	candidates := []string{
+		`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`,
+		`C:\Program Files\Microsoft\Edge\Application\msedge.exe`,
+		`C:\Program Files (x86)\Microsoft\Edge Beta\Application\msedge.exe`,
+		`C:\Program Files\Microsoft\Edge Beta\Application\msedge.exe`,
+	}
+	if local := os.Getenv("LOCALAPPDATA"); local != "" {
+		candidates = append(candidates, filepath.Join(local, `Microsoft\Edge\Application\msedge.exe`))
+	}
+	for _, candidate := range candidates {
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate
+		}
+	}
+	if path, err := exec.LookPath("msedge.exe"); err == nil {
+		return path
+	}
+	return ""
+}
+
+func browserCommand() string {
+	if strings.EqualFold(runtime.GOOS, "darwin") {
+		return "open"
+	}
+	return "xdg-open"
+}

@@ -1,0 +1,8 @@
+{
+  "appId": "com.nhtofa.vibrationanalyzer",
+  "appName": "Vibration Analyzer",
+  "webDir": "../web",
+  "android": {
+    "minWebViewVersion": 60
+  }
+}

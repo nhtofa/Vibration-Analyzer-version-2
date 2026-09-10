@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Vibration Analyzer</string>
+    <string name="title_activity_main">Vibration Analyzer</string>
+    <string name="package_name">com.nhtofa.vibrationanalyzer</string>
+    <string name="custom_url_scheme">com.nhtofa.vibrationanalyzer</string>
+</resources>

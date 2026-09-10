@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <title>Vibration Analyzer</title>
+  <link rel="stylesheet" href="./style.css">
+  <script src="./vendor/xlsx.full.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Condition monitoring</p>
+      <h1>Vibration Analyzer</h1>
+      <p class="subtitle">Time, frequency, envelope, phase, and spectrogram analysis in a portable app.</p>
+    </div>
+    <div class="badge">Offline ready</div>
+  </header>
+
+  <main class="layout">
+    <aside class="controls" aria-label="Analysis controls">
+      <section class="control-section">
+        <h2>1. Load data</h2>
+        <label class="file-picker">
+          <span>Choose CSV or Excel file</span>
+          <input id="file-input" type="file" accept=".csv,.xlsx,.xls,text/csv">
+        </label>
+        <p id="file-status" class="muted">No data loaded.</p>
+      </section>
+
+      <section class="control-section" id="data-controls" hidden>
+        <h2>2. Select signals</h2>
+        <label>Time column<select id="time-column"></select></label>
+        <label>Measured signal<select id="signal-column"></select></label>
+        <label>Reference signal <span class="optional">(phase)</span><select id="reference-column"><option value="">None</option></select></label>
+      </section>
+
+      <section class="control-section" id="analysis-controls" hidden>
+        <h2>3. Analysis</h2>
+        <label>View<select id="analysis-select">
+          <option value="time">Time domain</option>
+          <option value="frequency">Frequency domain</option>
+          <option value="envelope">Envelope</option>
+          <option value="phase">Phase</option>
+          <option value="spectrogram">Spectrogram</option>
+        </select></label>
+        <label>Window<select id="window-select">
+          <option value="none">No window</option>
+          <option value="hann" selected>Hann</option>
+          <option value="hamming">Hamming</option>
+          <option value="blackman">Blackman</option>
+          <option value="flattop">Flat-top</option>
+        </select></label>
+        <label>Maximum frequency <output id="frequency-output">Auto</output>
+          <input id="frequency-max" type="range" min="0" max="1" step="0.1" value="1">
+        </label>
+      </section>
+
+      <section class="control-section" id="envelope-controls" hidden>
+        <h2>Envelope filter</h2>
+        <label>Low cut-off (Hz)<input id="envelope-low" type="number" min="0.1" step="0.1" value="60"></label>
+        <label>High cut-off (Hz)<input id="envelope-high" type="number" min="0.2" step="0.1" value="100"></label>
+      </section>
+
+      <section class="control-section" id="spectrogram-controls" hidden>
+        <h2>Spectrogram</h2>
+        <label>Segment length<select id="spectrogram-segment"></select></label>
+        <label>Overlap <output id="overlap-output">75%</output>
+          <input id="spectrogram-overlap" type="range" min="0" max="95" step="5" value="75">
+        </label>
+      </section>
+      <p class="small-note">Portable builds use the same signal-processing core as the Streamlit version. CSV and XLSX files are processed locally; no upload is performed.</p>
+    </aside>
+
+    <section class="workspace">
+      <div id="empty-state" class="empty-state">
+        <div class="empty-icon">〽</div>
+        <h2>Load a vibration measurement to begin</h2>
+        <p>Use a time column plus one or more numeric vibration channels.</p>
+      </div>
+      <div id="dashboard" hidden>
+        <div id="summary" class="summary-grid"></div>
+        <div id="plots" class="plots"></div>
+      </div>
+    </section>
+  </main>
+  <footer>Vibration Analyzer · local analysis · <span id="app-version">v2.0.0</span></footer>
+  <script src="./app.js"></script>
+</body>
+</html>
